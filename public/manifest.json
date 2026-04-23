@@ -1,0 +1,16 @@
+{
+  "name": "Repetico Audio Player",
+  "short_name": "Repetico",
+  "description": "High-performance, specialized PWA for audio training sessions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a10",
+  "theme_color": "#0f1117",
+  "icons": [
+    {
+      "src": "/Icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

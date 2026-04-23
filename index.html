@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Repetico</title>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/css/index.css" />
+  <link rel="stylesheet" href="/src/css/layout.css" />
+  <link rel="stylesheet" href="/src/css/components.css" />
+  <link rel="stylesheet" href="/src/css/player.css" />
+  <link rel="icon" type="image/png" href="/Icon.png">
+</head>
+<body>
+
+<div class="app-container" id="app">
+
+  <!-- ════ MAIN PLAYER SCREEN ════ -->
+  <div class="screen" id="playerScreen">
+    <div class="player-wrapper">
+      
+      <div class="player-left">
+        <!-- Header -->
+        <div class="hdr">
+          <div>
+            <div class="hdr-title" id="uiSongTitle">No Song Loaded</div>
+          </div>
+          <div style="display:flex; gap: 0.5rem;">
+            <div class="hdr-ico" id="btnThemeToggle" title="Toggle Theme">◐</div>
+            <div class="hdr-ico" id="btnSettings" title="Song Settings">⚙</div>
+          </div>
+        </div>
+
+        <!-- Circles + Dials (SVG) -->
+        <div class="circles-area">
+          <svg id="mainSvg" viewBox="0 0 375 340" preserveAspectRatio="xMidYMid meet">
+            <!-- POSITION DIAL (Full 360 disk) -->
+            <g id="posDial" style="cursor:grab">
+              <circle cx="148" cy="170" r="122" fill="#141620" stroke="#23273a" stroke-width="2"/>
+              <g stroke="#3d4460" stroke-width="1.5" stroke-linecap="round" id="posDialTicks"></g>
+            </g>
+
+            <!-- SPEED DIAL (Full 360 disk) -->
+            <g id="spdDial" style="cursor:grab">
+              <circle cx="268" cy="90" r="80" fill="#141620" stroke="#23273a" stroke-width="2"/>
+              <g stroke="#3d4460" stroke-width="1.2" stroke-linecap="round" id="spdDialTicks"></g>
+            </g>
+
+            <!-- LARGE PLAY CIRCLE -->
+            <g id="playBtnGroup" style="cursor:pointer">
+              <circle cx="148" cy="170" r="108" fill="#161925" stroke="#2a2d3e" stroke-width="1.5"/>
+              <circle cx="148" cy="170" r="90" fill="none" stroke="#23273a" stroke-width="1"/>
+              <!-- Play Icon -->
+              <polygon id="playIcon" points="128,146 128,194 176,170" fill="#7c6ef5" opacity=".9"/>
+              <!-- Pause Icon (hidden by default) -->
+              <g id="pauseIcon" style="display:none;" fill="#7c6ef5" opacity=".9">
+                <rect x="132" y="146" width="12" height="48" />
+                <rect x="152" y="146" width="12" height="48" />
+              </g>
+            </g>
+            <text id="uiCurrentTime" x="148" y="215" text-anchor="middle" font-size="20" font-weight="600" fill="#e2e8f0" font-family="monospace">0:00</text>
+            <text id="uiTimeLeft" x="148" y="235" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui">-0:00</text>
+
+            <!-- SMALL SPEED CIRCLE -->
+            <circle cx="268" cy="90" r="68" fill="#131620" stroke="#2a2d3e" stroke-width="1.5"/>
+            <circle cx="268" cy="90" r="54" fill="none" stroke="#23273a" stroke-width="1"/>
+            <text id="uiSpeedVal" x="268" y="90" text-anchor="middle" font-size="24" font-weight="700" fill="#4fd1c5" font-family="system-ui">100%</text>
+            <text x="268" y="110" text-anchor="middle" font-size="12" fill="#64748b" font-family="system-ui">speed</text>
+
+            <path d="M 214,130 Q 208,100 230,72" fill="none" stroke="#2e3347" stroke-width="2" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="player-right">
+        <!-- Sections -->
+        <div class="sections-area">
+          <div class="sec-label">Sections</div>
+          <div class="sec-grid" id="secGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Intervals bar (hidden on desktop) -->
+        <div class="intervals-bar">
+          <span class="int-label">Intervals</span>
+          <div class="toggle" id="mainIntToggle" title="Toggle interval loop on/off">
+            <div class="toggle-thumb"></div>
+          </div>
+          <div class="int-settings-btn" id="btnIntervalSettings" title="Interval Settings">⚙</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ SONG SETTINGS SCREEN ════ -->
+  <div class="screen settings-screen" id="settingsScreen" style="display:none;">
+    <div class="settings-hdr">
+      <h2>Song Settings</h2>
+      <button class="btn-close" id="btnCloseSettings">×</button>
+    </div>
+
+    <!-- Songs List -->
+    <div class="list-card" style="flex:0 0 auto;">
+      <div class="list-header">
+        <h3>Library</h3>
+        <div style="display:flex; gap: 0.3rem;">
+          <button class="btn-add" id="btnExport" title="Export Song & Sections">Export</button>
+          <label class="btn-add" style="cursor:pointer;" title="Import .repetico file">
+            Import
+            <input type="file" id="fileImport" accept=".repetico" style="display:none;" />
+          </label>
+          <label class="btn-add" style="cursor:pointer;" title="Upload Audio File">
+            Upload
+            <input type="file" id="fileUpload" accept="audio/*" style="display:none;" />
+          </label>
+        </div>
+      </div>
+      <div style="overflow-y:auto; max-height: 150px;" id="libraryList">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Sections List -->
+    <div class="list-card" style="flex: 1; display: flex; flex-direction: column;">
+      <div class="list-header">
+        <h3>Sections</h3>
+        <button class="btn-add" id="btnAddSection">Add Section</button>
+      </div>
+      <div style="overflow-y:auto; flex:1;" id="sectionsList">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ INTERVAL SETTINGS SCREEN ════ -->
+  <div class="screen settings-screen" id="intervalSettingsScreen" style="display:none;">
+    <div class="settings-hdr">
+      <h2>Intervals</h2>
+      <div class="toggle" id="masterIntervalToggle" title="Enable/Disable Intervals">
+        <div class="toggle-thumb"></div>
+      </div>
+      <button class="btn-close" id="btnCloseIntervals">×</button>
+    </div>
+
+    <!-- Interval Bounds -->
+    <div class="bounds-display">
+      <div class="bounds-col">
+        <span class="bounds-lbl">Start</span>
+        <span class="bounds-val" id="intStartVal">--:--</span>
+      </div>
+      <div class="bounds-div">⟶</div>
+      <div class="bounds-col">
+        <span class="bounds-lbl">End</span>
+        <span class="bounds-val" id="intEndVal">--:--</span>
+      </div>
+    </div>
+
+    <!-- Sections Selection -->
+    <div class="list-card" style="flex:1;">
+      <div class="list-header">
+        <h3>Train Sections</h3>
+      </div>
+      <div style="overflow-y:auto; flex:1;" id="intervalSectionList">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Behavior Settings -->
+    <div class="settings-block">
+      <div class="settings-row">
+        <span style="font-size:0.95em; font-weight:600;">Auto Restart</span>
+        <div class="toggle on" id="autoRestartToggle">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      
+      <div class="expl-text" id="autoRestartExpl">
+        Auto restart loops the interval. When reaching the end, it waits for the configured delay, then plays from the beginning.
+      </div>
+      <div class="expl-text" id="noRestartExpl" style="display:none;">
+        No auto restart means when reaching the end of the interval, the cursor is set back to the start of the interval and paused.
+      </div>
+
+      <div class="delay-selector" id="delaySelector">
+        <span style="font-size:0.85em; color:var(--text);">Delay:</span>
+        <input type="number" id="loopDelayInput" value="2" min="0" step="1">
+        <span style="font-size:0.85em; color:var(--muted);">seconds</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ EDIT SECTION POPUP ════ -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <h3>Edit Section</h3>
+      <div class="input-group">
+        <label>Section Name</label>
+        <input type="text" id="editSecName"/>
+      </div>
+      <div class="row">
+        <div class="input-group" style="flex:1; width:100%;">
+          <label>Start (seconds)</label>
+          <input type="number" step="0.01" id="editSecStart"/>
+        </div>
+        <div class="input-group" style="flex:1; width:100%;">
+          <label>End (seconds)</label>
+          <input type="number" step="0.01" id="editSecEnd"/>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; margin-top:0.5rem; gap:0.5rem;">
+        <input type="range" id="previewTimeline" value="0" min="0" max="100" style="width: 100%; accent-color: var(--accent);">
+        <button class="btn-outline" id="btnPreviewSection" style="font-size:0.85em;">▶ Play Preview</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" id="btnCancelEdit">Cancel</button>
+        <button class="btn-primary" id="btnSaveEdit">Save</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-container -->
+
+<!-- Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(registration => {
+        console.log('SW registered: ', registration);
+      }).catch(registrationError => {
+        console.log('SW registration failed: ', registrationError);
+      });
+    });
+  }
+</script>
+
+<!-- Main Application Logic -->
+<script type="module" src="/src/js/main.js"></script>
+</body>
+</html>

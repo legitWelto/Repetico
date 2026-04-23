@@ -1,0 +1,62 @@
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d28;
+  --surface2: #1e2235;
+  --border: #2e3347;
+  --accent: #7c6ef5;
+  --teal: #4fd1c5;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --label: #94a3b8;
+}
+
+body.light-mode {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --teal: #0d9488;
+  --text: #0f172a;
+  --muted: #475569;
+  --label: #64748b;
+}
+
+body.light-mode #posDial circle { fill: #f8fafc; stroke: #e2e8f0; }
+body.light-mode #spdDial circle { fill: #f8fafc; stroke: #e2e8f0; }
+body.light-mode #playBtnGroup circle[fill="#161925"] { fill: #ffffff; stroke: #e2e8f0; }
+body.light-mode #playBtnGroup circle[fill="none"] { stroke: #cbd5e1; }
+body.light-mode #uiCurrentTime { fill: #0f172a; }
+body.light-mode .toggle { background: #cbd5e1; border-color: #94a3b8; }
+body.light-mode .toggle.on { background: var(--teal); border-color: var(--teal); }
+body.light-mode circle[fill="#131620"] { fill: #f8fafc; stroke: #e2e8f0; }
+body.light-mode circle[r="54"][fill="none"] { stroke: #cbd5e1; }
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #080a10;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* Base App Container */
+.app-container {
+  width: 100%;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
