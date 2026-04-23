@@ -44,7 +44,7 @@ Optimized for the "Lock Screen" experience and cross-platform reliability.
     * The notification drawer/lock screen shows the **current section name** instead of just the song title.
     * Skip buttons are re-mapped to navigate between **Sections** rather than tracks.
     * Includes custom buttons for Speed Up/Slow Down directly in the system tray.
-* **Native APK Support:** Packaged via Bubblewrap/TWA for a seamless Android experience, installable directly to the home screen with no browser chrome.
+* **Native APK Support:** Wrapped via **Capacitor** for a high-performance native Android experience, allowing full hardware integration and offline reliability.
 
 ## 🎨 Adaptive UI & Styling
 The interface intelligently morphs to fit your device and environment.
@@ -60,7 +60,7 @@ The interface intelligently morphs to fit your device and environment.
 * **Audio Engine:** Web Audio API & Media Session API.
 * **Storage:** IndexedDB for local persistence.
 * **Deployment:** Dockerized and hosted on **Google Cloud Run**.
-* **Platform:** PWA (Progressive Web App) with TWA (Trusted Web Activity) wrapper for Android APKs.
+* **Platform:** PWA (Progressive Web App) with a native **Capacitor** wrapper for Android.
 
 ## 🛠 Local Development
 
@@ -84,23 +84,47 @@ The interface intelligently morphs to fit your device and environment.
 4. **Open the app:**
    Navigate to `http://localhost:3000` in your browser.
 
-## 📦 Building an APK (Android)
+## Android Packaging Instructions
 
-Repetico uses **Trusted Web Activity (TWA)** to package the PWA as a native Android APK.
+We use **Capacitor** to wrap this web application into a native Android APK. Follow these steps on a machine with Android Studio installed:
 
-### Using Bubblewrap CLI
-1. **Install Bubblewrap:**
-   ```bash
-   npm install -g @bubblewrap/cli
-   ```
-2. **Initialize the Android Project:**
-   Ensure your app is deployed to a HTTPS URL (Bubblewrap requires a live URL for the manifest).
-   ```bash
-   bubblewrap init --manifest=https://your-deployed-app.com/manifest.json
-   ```
-3. **Build the APK:**
-   ```bash
-   bubblewrap build
-   ```
-4. **Output:**
-   The signed APK will be located in the directory, ready for installation or Play Store upload.
+### 1. Project Setup
+Ensure all dependencies are installed:
+```bash
+npm install
+```
+
+### 2. Initialize Capacitor
+Initialize the Capacitor configuration (if not already done):
+```bash
+npm run cap:init
+```
+
+### 3. Add Android Platform
+Create the native Android project folder:
+```bash
+npm run cap:add:android
+```
+
+### 4. Deploy to Android Studio (Combined)
+The fastest way to test on Android is to use the combined command which runs tests, syncs assets, and opens the IDE:
+```bash
+npm run android:deploy
+```
+
+### 5. Manual Sync (Individual Steps)
+If you prefer to run steps manually:
+- **Sync Web Assets**: `npm run cap:copy`
+- **Open in Android Studio**: `npm run cap:open:android`
+
+### 6. Build the APK (Detailed)
+Once Android Studio opens, follow these sub-steps to generate the final file:
+
+1. **Wait for Gradle Sync**: Look at the bottom status bar in Android Studio. Wait for "Gradle sync finished" and for the progress bars to disappear. This can take several minutes the first time.
+2. **Select Build Variant**: Ensure the build variant is set to `debug` (default) for testing, or `release` if you have signing keys configured.
+3. **Trigger Build**: In the top menu bar, go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
+4. **Locate Output**: 
+   - A small notification bubble will appear in the bottom-right corner once the build finishes (usually labeled "Build APK: APK(s) generated successfully").
+   - Click the blue **"locate"** link inside that bubble.
+   - This will open your file explorer to the folder containing `app-debug.apk`.
+5. **Install on Device**: Transfer this `.apk` file to your Android phone (via USB, Drive, or Email) and open it to install the game.
