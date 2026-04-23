@@ -112,6 +112,8 @@
 .list-item:last-child { border-bottom: none; }
 .list-item-title { font-size: 0.95em; color: var(--text); margin-bottom:0.1rem; }
 .list-item-meta { font-size: 0.75em; color: var(--muted); }
+.del-ico:hover { color: #ef4444 !important; }
+.edit-ico:hover { color: var(--accent) !important; }
 
 /* ── Interval Bounds & Checkboxes ── */
 .bounds-display {

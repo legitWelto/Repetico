@@ -14,7 +14,7 @@
   body { padding: 1rem; background: #000; }
   .app-container {
     display: grid !important;
-    grid-template-columns: 50% 25% 25%;
+    grid-template-columns: 2fr 1fr 1fr;
     grid-template-rows: 100%;
     gap: 1.5rem;
     height: calc(100vh - 2rem);

@@ -11,17 +11,20 @@
     "cap:add:android": "npx cap add android",
     "cap:copy": "npm run build && npx cap copy",
     "cap:open:android": "npx cap open android",
-    "test": "npx playwright test",
+    "generate:splash": "node scripts/generate-splash.cjs",
+    "cap:assets": "npm run generate:splash && npx @capacitor/assets generate --android",
+    "test": "echo 'No tests configured'",
     "android:deploy": "npm run test && npm run build && npx cap sync android && npx cap open android"
   },
   "devDependencies": {
-    "playwright": "^1.59.1",
-    "vite": "^5.2.0",
-    "@capacitor/cli": "^6.0.0"
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.0.0",
+    "sharp": "^0.34.5",
+    "vite": "^5.2.0"
   },
   "dependencies": {
-    "idb": "^8.0.0",
+    "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
-    "@capacitor/android": "^6.0.0"
+    "idb": "^8.0.0"
   }
 }

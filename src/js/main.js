@@ -15,6 +15,7 @@ const appState = {
   intervalStart: 0,
   intervalEnd: 0,
   isWaitingDelay: false,
+  activeSongFile: null, // Store the blob for saving metadata updates
 
   // UI callbacks
   onTimeUpdate: null,
@@ -122,6 +123,7 @@ async function loadSong(id) {
   if (!song || !metadata) return;
 
   appState.metadata = metadata;
+  appState.activeSongFile = song.file;
   
   // Update UI headers
   document.getElementById('uiSongTitle').textContent = metadata.name;
@@ -163,7 +165,15 @@ function renderSectionsList(sections) {
   sections.forEach((sec, index) => {
     const div = document.createElement('div');
     div.className = 'list-item';
-    div.innerHTML = `<div><div class="list-item-title">${sec.name}</div><div class="list-item-meta">${formatTime(sec.start)} - ${formatTime(sec.end)}</div></div><div style="color:var(--muted)">✎</div>`;
+    div.innerHTML = `
+      <div><div class="list-item-title">${sec.name}</div><div class="list-item-meta">${formatTime(sec.start)} - ${formatTime(sec.end)}</div></div>
+      <div style="display:flex; gap:0.8rem; align-items:center;">
+        <div class="edit-ico" style="color:var(--muted); cursor:pointer;">✎</div>
+        <div class="del-ico" style="color:var(--muted); cursor:pointer; font-size:1.1em;">🗑</div>
+      </div>
+    `;
+    
+    // Clicking the item opens the edit modal
     div.addEventListener('click', () => {
       document.getElementById('editSecName').value = sec.name;
       document.getElementById('editSecStart').value = sec.start;
@@ -173,6 +183,17 @@ function renderSectionsList(sections) {
       document.getElementById('editModal').style.display = 'flex';
       appState.editingSectionIndex = index;
     });
+
+    // Clicking delete specifically
+    div.querySelector('.del-ico').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm(`Remove section "${sec.name}"?`)) {
+        appState.metadata.sections.splice(index, 1);
+        await saveSongData(appState.activeSongId, appState.activeSongFile, appState.metadata);
+        updateSectionsUI();
+      }
+    });
+
     list.appendChild(div);
   });
 }
@@ -184,7 +205,7 @@ function bindSectionEditor() {
     const newSec = { name: `Section ${appState.metadata.sections.length + 1}`, start: 0, end: 10 };
     appState.metadata.sections.push(newSec);
     appState.metadata.sections.sort((a, b) => a.start - b.start);
-    await saveSongData(appState.activeSongId, (await getSongData(appState.activeSongId)).song.file, appState.metadata);
+    await saveSongData(appState.activeSongId, appState.activeSongFile, appState.metadata);
     updateSectionsUI();
   });
 
@@ -198,9 +219,22 @@ function bindSectionEditor() {
       end: parseFloat(document.getElementById('editSecEnd').value) || 0
     };
     appState.metadata.sections.sort((a, b) => a.start - b.start);
-    await saveSongData(appState.activeSongId, (await getSongData(appState.activeSongId)).song.file, appState.metadata);
+    await saveSongData(appState.activeSongId, appState.activeSongFile, appState.metadata);
     document.getElementById('editModal').style.display = 'none';
     updateSectionsUI();
+  });
+
+  // Delete Section Logic (from modal)
+  document.getElementById('btnDeleteSection').addEventListener('click', async () => {
+    if (!appState.metadata || appState.editingSectionIndex === undefined) return;
+    const idx = appState.editingSectionIndex;
+    const sec = appState.metadata.sections[idx];
+    if (confirm(`Remove section "${sec.name}"?`)) {
+      appState.metadata.sections.splice(idx, 1);
+      await saveSongData(appState.activeSongId, appState.activeSongFile, appState.metadata);
+      document.getElementById('editModal').style.display = 'none';
+      updateSectionsUI();
+    }
   });
 
   // Play Preview Logic

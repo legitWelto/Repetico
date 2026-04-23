@@ -32,3 +32,12 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.local-browsers
+
+# Android
+android/app/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+android/app/debug/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json

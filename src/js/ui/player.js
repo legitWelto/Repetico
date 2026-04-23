@@ -70,7 +70,7 @@ export function initPlayerUI(appState) {
   let posDragging = false;
   let spdDragging = false;
 
-  function makeDraggable(groupId, cx, cy, onDragStart, onDragMove, onDragEnd) {
+  function makeDraggable(groupId, cx, cy, onDragStart, onDragMove, onDragEnd, sensitivity = 0.4) {
     const svg = document.getElementById('mainSvg');
     const group = document.getElementById(groupId);
     let dragging = false, lastAngle = 0, rotation = 0;
@@ -100,10 +100,14 @@ export function initPlayerUI(appState) {
       let d = a - lastAngle;
       if(d > 180) d -= 360;
       if(d < -180) d += 360;
-      rotation += d;
+      
+      // Apply sensitivity scaling
+      const scaledDelta = d * sensitivity;
+      rotation += scaledDelta;
       lastAngle = a;
+      
       group.setAttribute('transform', `rotate(${rotation} ${cx} ${cy})`);
-      if (onDragMove) onDragMove(rotation, d);
+      if (onDragMove) onDragMove(rotation, scaledDelta);
     }
     function onUp(){ 
       if(dragging) {
@@ -142,7 +146,8 @@ export function initPlayerUI(appState) {
         uiTime.textContent = formatTime(t);
       }
     },
-    () => { posDragging = false; }
+    () => { posDragging = false; },
+    0.4 // Sensitivity: requires 2.5x more turning
   );
 
   // Speed Dial Drag
@@ -156,6 +161,7 @@ export function initPlayerUI(appState) {
       setSpeed(currentSpeed);
       speedVal.textContent = `${Math.round(currentSpeed * 100)}%`;
     },
-    () => { spdDragging = false; }
+    () => { spdDragging = false; },
+    0.4 // Sensitivity: requires 2.5x more turning
   );
 }

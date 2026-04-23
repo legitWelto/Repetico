@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/Logo.png" alt="Repetico Logo" width="200">
+</p>
+
 # Repetico Audio Player
 
 **Repetico** is a high-performance, specialized Progressive Web App (PWA) designed for musicians, dancers, and athletes who require granular control over their audio training sessions. Unlike standard media players, Repetico focuses on section-based navigation, precise time-stretching, and automated looping.
@@ -6,9 +10,7 @@
 The heart of the application is a custom-built audio engine designed for precision.
 
 * **Dynamic Playback Interface:** A custom UI featuring a toggleable Play/Pause button, a high-precision timeline slider, and manual timestamp input for exact positioning.
-* **Pitch-Preserved Speed Control:** Adjust playback speed without affecting the pitch. 
-    * **Fine-Tuning:** Use incremental buttons for $\pm 1\%$ and $\pm 5\%$ adjustments.
-    * **Direct Input:** Enter specific percentage values for instant speed changes.
+* **Pitch-Preserved Speed Control:** Adjust playback speed without affecting the pitch.
 * **Section-Based Navigation:** Jump instantly between predefined song segments using dedicated section buttons on the primary dashboard.
 
 ![Main Player Screen](/public/screenshot_player.png)
@@ -19,7 +21,7 @@ Designed for repetitive practice, the training module allows users to master spe
 * **Section Training Mode:** A dedicated screen to select a "Starting Section" and "Ending Section" to define a training interval.
 * **Flexible Loop Logic:**
     * **Auto-Loop:** Automatically restarts the interval once the end is reached.
-    * **Stop-on-End:** Plays the selection once and pauses; hitting play again restarts the loop from the beginning.
+    * **Stop-on-End:** Plays the selection once and pauses; hitting play again restarts the loop from the beginning of the intervall.
 * **Configurable Delay:** Set a custom delay (in seconds) between loops to allow time for resetting positions or instruments.
 
 ![Interval Settings Screen](/public/screenshot_intervals.png)
@@ -28,7 +30,7 @@ Designed for repetitive practice, the training module allows users to master spe
 Repetico is a "privacy-first" local-storage app. Your files never leave your device.
 
 * **IndexedDB Persistence:** Audio files and section metadata are stored directly in your browser's IndexedDB. Your library remains intact even after closing the browser or restarting your device.
-* **Song Manager:** Easily switch between tracks via a dropdown menu, upload new files from your local system, or delete songs to free up storage.
+* **Song Manager:** Easily switch between tracks, upload new files from your local system, or delete songs to free up storage.
 * **Section Editor:** A visual tool to define song segments.
     * Assign custom names to sections.
     * Define precise start and end timestamps.
@@ -86,7 +88,12 @@ The interface intelligently morphs to fit your device and environment.
 
 ## Android Packaging Instructions
 
-We use **Capacitor** to wrap this web application into a native Android APK. Follow these steps on a machine with Android Studio installed:
+We use **Capacitor** to wrap this web application into a native Android APK. 
+
+> [!NOTE]
+> The `android` folder should be **committed** to your repository. It contains essential native configurations and asset overrides. Build artifacts are already excluded via `.gitignore`.
+
+Follow these steps on a machine with Android Studio installed:
 
 ### 1. Project Setup
 Ensure all dependencies are installed:
@@ -117,7 +124,17 @@ If you prefer to run steps manually:
 - **Sync Web Assets**: `npm run cap:copy`
 - **Open in Android Studio**: `npm run cap:open:android`
 
-### 6. Build the APK (Detailed)
+### 6. App Icons & Splash Screens
+We use `@capacitor/assets` to generate all required Android image sizes from source files.
+1. Place your source icon in `assets/icon-only.png` (min 1024x1024px).
+2. Place your source splash in `assets/splash.png` (min 2732x2732px).
+3. Run the generation script:
+   ```bash
+   npm run cap:assets
+   ```
+This will automatically update all density-specific folders in `android/app/src/main/res`.
+
+### 7. Build the APK (Detailed)
 Once Android Studio opens, follow these sub-steps to generate the final file:
 
 1. **Wait for Gradle Sync**: Look at the bottom status bar in Android Studio. Wait for "Gradle sync finished" and for the progress bars to disappear. This can take several minutes the first time.
@@ -127,4 +144,4 @@ Once Android Studio opens, follow these sub-steps to generate the final file:
    - A small notification bubble will appear in the bottom-right corner once the build finishes (usually labeled "Build APK: APK(s) generated successfully").
    - Click the blue **"locate"** link inside that bubble.
    - This will open your file explorer to the folder containing `app-debug.apk`.
-5. **Install on Device**: Transfer this `.apk` file to your Android phone (via USB, Drive, or Email) and open it to install the game.
+5. **Install on Device**: Transfer this `.apk` file to your Android phone (via USB, Drive, or Email) and open it to install the game.
