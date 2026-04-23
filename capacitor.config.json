@@ -1,5 +1,5 @@
 {
-  "appId": "com.repetico.app",
-  "appName": "repetico",
+  "appId": "com.example.app",
+  "appName": "Repetico",
   "webDir": "dist"
 }

@@ -17,21 +17,21 @@ export function initPlayerUI(appState) {
 
   // Draw ticks
   const posTicks = document.getElementById('posDialTicks');
-  for(let i=0; i<36; i++){
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  for (let i = 0; i < 36; i++) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', '148'); line.setAttribute('y1', '48');
     line.setAttribute('x2', '148'); line.setAttribute('y2', '56');
-    line.setAttribute('transform', `rotate(${i*10} 148 170)`);
-    if(i%6 === 0) { line.setAttribute('stroke', '#7c6ef5'); line.setAttribute('y2', '60'); }
+    line.setAttribute('transform', `rotate(${i * 10} 148 170)`);
+    if (i % 6 === 0) { line.setAttribute('stroke', '#7c6ef5'); line.setAttribute('y2', '60'); }
     posTicks.appendChild(line);
   }
   const spdTicks = document.getElementById('spdDialTicks');
-  for(let i=0; i<24; i++){
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  for (let i = 0; i < 24; i++) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', '268'); line.setAttribute('y1', '10');
     line.setAttribute('x2', '268'); line.setAttribute('y2', '16');
-    line.setAttribute('transform', `rotate(${i*15} 268 90)`);
-    if(i%4 === 0) { line.setAttribute('stroke', '#4fd1c5'); line.setAttribute('y2', '20'); }
+    line.setAttribute('transform', `rotate(${i * 15} 268 90)`);
+    if (i % 4 === 0) { line.setAttribute('stroke', '#4fd1c5'); line.setAttribute('y2', '20'); }
     spdTicks.appendChild(line);
   }
 
@@ -45,7 +45,7 @@ export function initPlayerUI(appState) {
     playIcon.style.display = 'none';
     pauseIcon.style.display = 'block';
   };
-  
+
   appState.onAudioPause = () => {
     playIcon.style.display = 'block';
     pauseIcon.style.display = 'none';
@@ -80,11 +80,11 @@ export function initPlayerUI(appState) {
       const sx = svg.viewBox.baseVal.width / r.width;
       const sy = svg.viewBox.baseVal.height / r.height;
       const src = e.touches ? e.touches[0] : e;
-      return { x:(src.clientX - r.left)*sx - cx, y:(src.clientY - r.top)*sy - cy };
+      return { x: (src.clientX - r.left) * sx - cx, y: (src.clientY - r.top) * sy - cy };
     }
-    function angle(p){ return Math.atan2(p.y, p.x) * 180 / Math.PI; }
+    function angle(p) { return Math.atan2(p.y, p.x) * 180 / Math.PI; }
 
-    function onDown(e){
+    function onDown(e) {
       e.preventDefault();
       dragging = true;
       lastAngle = angle(svgPoint(e));
@@ -93,48 +93,48 @@ export function initPlayerUI(appState) {
         rotation = onDragStart();
       }
     }
-    function onMove(e){
-      if(!dragging) return;
+    function onMove(e) {
+      if (!dragging) return;
       e.preventDefault();
       const a = angle(svgPoint(e));
       let d = a - lastAngle;
-      if(d > 180) d -= 360;
-      if(d < -180) d += 360;
-      
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+
       // Apply sensitivity scaling
       const scaledDelta = d * sensitivity;
       rotation += scaledDelta;
       lastAngle = a;
-      
+
       group.setAttribute('transform', `rotate(${rotation} ${cx} ${cy})`);
       if (onDragMove) onDragMove(rotation, scaledDelta);
     }
-    function onUp(){ 
-      if(dragging) {
-        dragging = false; 
-        group.style.cursor = 'grab'; 
+    function onUp() {
+      if (dragging) {
+        dragging = false;
+        group.style.cursor = 'grab';
         if (onDragEnd) onDragEnd(rotation);
       }
     }
 
     const r = groupId === 'posDial' ? 122 : 80;
-    const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circ.setAttribute('cx', cx); circ.setAttribute('cy', cy); circ.setAttribute('r', r);
-    circ.setAttribute('fill','none'); circ.setAttribute('stroke','transparent');
-    circ.setAttribute('stroke-width','40');
+    circ.setAttribute('fill', 'none'); circ.setAttribute('stroke', 'transparent');
+    circ.setAttribute('stroke-width', '40');
     circ.style.cursor = 'grab';
     group.prepend(circ);
 
-    group.addEventListener('mousedown',  onDown);
-    group.addEventListener('touchstart', onDown, {passive:false});
+    group.addEventListener('mousedown', onDown);
+    group.addEventListener('touchstart', onDown, { passive: false });
     window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onMove, {passive:false});
-    window.addEventListener('mouseup',   onUp);
-    window.addEventListener('touchend',  onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
   }
 
   // Position Dial Drag
-  makeDraggable('posDial', 148, 170, 
+  makeDraggable('posDial', 148, 170,
     () => { posDragging = true; return posRotation; },
     (rot, delta) => {
       posRotation = rot;
@@ -151,7 +151,7 @@ export function initPlayerUI(appState) {
   );
 
   // Speed Dial Drag
-  makeDraggable('spdDial', 268, 90, 
+  makeDraggable('spdDial', 268, 90,
     () => { spdDragging = true; return (currentSpeed - 1) * 360; }, // Map speed to angle roughly
     (rot, delta) => {
       // Each degree is e.g. 0.5% speed

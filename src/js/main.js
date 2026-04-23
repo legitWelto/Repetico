@@ -3,7 +3,7 @@ import { loadAudio, play, pause, seek, on, audio, getCurrentTime } from './audio
 import { initPlayerUI } from './ui/player.js';
 import { initSettingsUI, renderIntervalSections, updateIntervalBoundsUI } from './ui/settings.js';
 import { renderSections } from './ui/sections.js';
-import { setupMediaSession, updateMediaSessionState, bindMediaSessionControls } from './utils/mediaSession.js';
+import { setupMediaSession, updateMediaSessionState, updateMediaSessionTitle, bindMediaSessionControls, ensureCapReady } from './utils/mediaSession.js';
 import { formatTime } from './utils/helpers.js';
 
 const appState = {
@@ -319,12 +319,10 @@ on('timeupdate', (time) => {
   }
 
   // Update Media Session current section name
-  if ('mediaSession' in navigator && appState.metadata && appState.metadata.sections) {
+  if (appState.metadata && appState.metadata.sections) {
     const activeSec = [...appState.metadata.sections].reverse().find(s => s.start <= time);
     const title = activeSec ? `${appState.metadata.name} - ${activeSec.name}` : appState.metadata.name;
-    if (navigator.mediaSession.metadata && navigator.mediaSession.metadata.title !== title) {
-       navigator.mediaSession.metadata.title = title;
-    }
+    updateMediaSessionTitle(title);
   }
 });
 
@@ -349,8 +347,8 @@ bindMediaSessionControls({
   onPrevSection: () => {
     const t = getCurrentTime();
     const secs = appState.metadata?.sections || [];
-    // Find section that starts before current time - 1 sec
-    const prev = [...secs].reverse().find(s => s.start < t - 1);
+    // Find section that starts before current time - 4 sec (longer window for double-click back)
+    const prev = [...secs].reverse().find(s => s.start < t - 4);
     if (prev) seek(prev.start);
     else seek(0);
   },
@@ -364,6 +362,9 @@ bindMediaSessionControls({
 
 // Initialize
 async function init() {
+  // Wait for Capacitor media session plugin to be ready (if on Android)
+  await ensureCapReady();
+
   // Theme Toggle
   document.getElementById('btnThemeToggle').addEventListener('click', () => {
     const isLight = document.body.classList.toggle('light-mode');
