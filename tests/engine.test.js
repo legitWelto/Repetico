@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Use a mock class for Audio
 class MockAudio {
@@ -56,18 +56,28 @@ class MockAudio {
 // Stub global Audio BEFORE importing engine
 vi.stubGlobal('Audio', MockAudio);
 
-// Import engine dynamically to ensure it uses the stubbed Audio
-const engine = await import('../src/js/audio/engine.js');
+// Mock MediaMetadata since it's used in WebAudioService
+global.MediaMetadata = class {
+  constructor(metadata) {
+    Object.assign(this, metadata);
+  }
+};
 
-describe('engine.js', () => {
+// Import WebAudioService
+const { WebAudioService } = await import('../src/js/services/audio/WebAudioService.js');
+
+describe('WebAudioService (Engine)', () => {
+  let engine;
+
   beforeEach(() => {
+    engine = new WebAudioService();
     engine.audio.currentTime = 0;
     engine.audio.playbackRate = 1;
     engine.audio.paused = true;
   });
 
   it('loads audio', () => {
-    engine.loadAudio('test.mp3');
+    engine.load('test.mp3');
     expect(engine.audio.src).toBe('test.mp3');
   });
 
@@ -92,16 +102,6 @@ describe('engine.js', () => {
     expect(engine.audio.playbackRate).toBe(1.5);
   });
 
-  it('gets current time', () => {
-    engine.audio.currentTime = 10;
-    expect(engine.getCurrentTime()).toBe(10);
-  });
-
-  it('gets duration', () => {
-    engine.audio.duration = 200;
-    expect(engine.getDuration()).toBe(200);
-  });
-
   it('checks if playing', () => {
     engine.audio.paused = true;
     expect(engine.isPlaying()).toBe(false);
@@ -109,14 +109,27 @@ describe('engine.js', () => {
     expect(engine.isPlaying()).toBe(true);
   });
 
-  it('registers and triggers events', () => {
+  it('registers and triggers progress events', () => {
     const callback = vi.fn();
-    engine.on('timeupdate', callback);
+    engine.onProgress(callback);
     
     // Simulate timeupdate from the audio object
     engine.audio.currentTime = 15;
     engine.audio.trigger('timeupdate');
     
     expect(callback).toHaveBeenCalledWith(15);
+  });
+
+  it('registers and triggers play/pause events', () => {
+    const playCb = vi.fn();
+    const pauseCb = vi.fn();
+    engine.onPlay(playCb);
+    engine.onPause(pauseCb);
+    
+    engine.play();
+    expect(playCb).toHaveBeenCalled();
+    
+    engine.pause();
+    expect(pauseCb).toHaveBeenCalled();
   });
 });

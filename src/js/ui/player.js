@@ -1,4 +1,4 @@
-import { play, pause, seek, setSpeed, isPlaying, getDuration, audio } from '../audio/engine.js';
+import { AudioEngine } from '../services/audio/index.js';
 import { formatTime } from '../utils/helpers.js';
 
 let duration = 0;
@@ -37,8 +37,8 @@ export function initPlayerUI(appState) {
 
   // Play/Pause
   playBtnGroup.addEventListener('click', () => {
-    if (isPlaying()) pause();
-    else play();
+    if (AudioEngine.isPlaying()) AudioEngine.pause();
+    else AudioEngine.play();
   });
 
   appState.onAudioPlay = () => {
@@ -142,7 +142,7 @@ export function initPlayerUI(appState) {
       if (duration > 0) {
         let t = (rot % 360) / 360 * duration;
         if (t < 0) t += duration;
-        seek(t);
+        AudioEngine.seek(t);
         uiTime.textContent = formatTime(t);
       }
     },
@@ -158,7 +158,7 @@ export function initPlayerUI(appState) {
       currentSpeed += delta * 0.005;
       if (currentSpeed < 0.25) currentSpeed = 0.25;
       if (currentSpeed > 3.0) currentSpeed = 3.0;
-      setSpeed(currentSpeed);
+      AudioEngine.setSpeed(currentSpeed);
       speedVal.textContent = `${Math.round(currentSpeed * 100)}%`;
     },
     () => { spdDragging = false; },

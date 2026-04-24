@@ -1,9 +1,8 @@
 import { checkAndLoadDemo, getSongData, getAllMetadata, saveSongData, deleteSongData } from './storage/library.js';
-import { loadAudio, play, pause, seek, on, audio, getCurrentTime } from './audio/engine.js';
+import { AudioEngine } from './services/audio/index.js';
 import { initPlayerUI } from './ui/player.js';
 import { initSettingsUI, renderIntervalSections, updateIntervalBoundsUI } from './ui/settings.js';
 import { renderSections } from './ui/sections.js';
-import { setupMediaSession, updateMediaSessionState, updateMediaSessionTitle, bindMediaSessionControls, ensureCapReady } from './utils/mediaSession.js';
 import { formatTime } from './utils/helpers.js';
 
 const appState = {
@@ -108,7 +107,7 @@ async function loadLibrary() {
           renderSectionsList([]);
           renderSections([], 'secGrid', ()=>{});
           renderIntervalSections([], calculateIntervalBounds);
-          pause();
+          AudioEngine.pause();
         }
         loadLibrary();
       }
@@ -128,17 +127,15 @@ async function loadSong(id) {
   // Update UI headers
   document.getElementById('uiSongTitle').textContent = metadata.name;
 
-  // Load Audio blob
+  // Load Audio
   const url = URL.createObjectURL(song.file);
-  loadAudio(url);
-
-  await setupMediaSession(metadata.name, metadata.artist);
+  await AudioEngine.load(url, metadata.sections || []);
 
   // Render sections
   const safeSections = metadata.sections || [];
   renderSections(safeSections, 'secGrid', (sec) => {
-    seek(sec.start);
-    play();
+    AudioEngine.seek(sec.start);
+    AudioEngine.play();
   });
   
   renderSectionsList(safeSections);
@@ -152,8 +149,8 @@ async function loadSong(id) {
 function updateSectionsUI() {
   const safeSections = appState.metadata.sections || [];
   renderSections(safeSections, 'secGrid', (sec) => {
-    seek(sec.start);
-    play();
+    AudioEngine.seek(sec.start);
+    AudioEngine.play();
   });
   renderSectionsList(safeSections);
   renderIntervalSections(safeSections, calculateIntervalBounds);
@@ -243,8 +240,8 @@ function bindSectionEditor() {
     const start = parseFloat(document.getElementById('editSecStart').value) || 0;
     const end = parseFloat(document.getElementById('editSecEnd').value) || 0;
     appState.previewEnd = end;
-    seek(start);
-    play();
+    AudioEngine.seek(start);
+    AudioEngine.play();
   });
 
   previewTimeline.addEventListener('input', (e) => {
@@ -252,7 +249,7 @@ function bindSectionEditor() {
     const start = parseFloat(document.getElementById('editSecStart').value) || 0;
     const end = parseFloat(document.getElementById('editSecEnd').value) || 0;
     const targetTime = start + (end - start) * (val / 100);
-    seek(targetTime);
+    AudioEngine.seek(targetTime);
   });
 }
 
@@ -284,86 +281,51 @@ function calculateIntervalBounds() {
 }
 
 // Event bindings
-on('timeupdate', (time) => {
-  if (appState.onTimeUpdate) appState.onTimeUpdate(time);
+// Initialize AudioEngine Listeners
+function setupAudioEngineListeners() {
+  AudioEngine.onProgress((time) => {
+    if (appState.onTimeUpdate) appState.onTimeUpdate(time);
 
-  // Preview Logic
-  if (appState.previewEnd) {
-    if (time >= appState.previewEnd) {
-      pause();
-      appState.previewEnd = null; // stop preview
-      document.getElementById('previewTimeline').value = 100;
-    } else {
-      const start = parseFloat(document.getElementById('editSecStart').value) || 0;
-      const progress = ((time - start) / (appState.previewEnd - start)) * 100;
-      document.getElementById('previewTimeline').value = Math.max(0, Math.min(100, progress));
-    }
-  }
-
-  // Interval Logic
-  if (appState.intervalsEnabled && !appState.isWaitingDelay && appState.intervalEnd > 0) {
-    if (time >= appState.intervalEnd) {
-      if (appState.autoRestart) {
-        appState.isWaitingDelay = true;
-        pause();
-        seek(appState.intervalStart);
-        setTimeout(() => {
-          appState.isWaitingDelay = false;
-          play();
-        }, appState.loopDelay * 1000);
+    // Preview Logic
+    if (appState.previewEnd) {
+      if (time >= appState.previewEnd) {
+        AudioEngine.pause();
+        appState.previewEnd = null; // stop preview
+        document.getElementById('previewTimeline').value = 100;
       } else {
-        pause();
-        seek(appState.intervalStart);
+        const start = parseFloat(document.getElementById('editSecStart').value) || 0;
+        const progress = ((time - start) / (appState.previewEnd - start)) * 100;
+        document.getElementById('previewTimeline').value = Math.max(0, Math.min(100, progress));
       }
     }
-  }
+  });
 
-  // Update Media Session current section name
-  if (appState.metadata && appState.metadata.sections) {
-    const activeSec = [...appState.metadata.sections].reverse().find(s => s.start <= time);
-    const title = activeSec ? `${appState.metadata.name} - ${activeSec.name}` : appState.metadata.name;
-    updateMediaSessionTitle(title);
-  }
-});
+  AudioEngine.onPlay(() => {
+    if (appState.onAudioPlay) appState.onAudioPlay();
+  });
 
-on('play', () => {
-  if (appState.onAudioPlay) appState.onAudioPlay();
-  updateMediaSessionState(true);
-});
+  AudioEngine.onPause(() => {
+    if (appState.onAudioPause) appState.onAudioPause();
+  });
 
-on('pause', () => {
-  if (appState.onAudioPause) appState.onAudioPause();
-  updateMediaSessionState(false);
-});
+  AudioEngine.onLoaded((dur) => {
+    if (appState.onAudioLoaded) appState.onAudioLoaded(dur);
+  });
 
-on('loaded', (dur) => {
-  if (appState.onAudioLoaded) appState.onAudioLoaded(dur);
-});
+  AudioEngine.onSectionChange((name) => {
+    // Current section name is handled by the engine for media session
+  });
+  
+  AudioEngine.onSpeedChange((rate) => {
+    // Sync UI if changed via lock screen
+    const speedVal = document.getElementById('uiSpeedVal');
+    if (speedVal) speedVal.textContent = `${Math.round(rate * 100)}%`;
+  });
+}
 
 // Initialize
 async function init() {
-  // Wait for Capacitor media session plugin to be ready (if on Android)
-  await ensureCapReady();
-
-  await bindMediaSessionControls({
-    onPlay: play,
-    onPause: pause,
-    onSeekTo: seek,
-    onPrevSection: () => {
-      const t = getCurrentTime();
-      const secs = appState.metadata?.sections || [];
-      // Find section that starts before current time - 4 sec (longer window for double-click back)
-      const prev = [...secs].reverse().find(s => s.start < t - 4);
-      if (prev) seek(prev.start);
-      else seek(0);
-    },
-    onNextSection: () => {
-      const t = getCurrentTime();
-      const secs = appState.metadata?.sections || [];
-      const next = secs.find(s => s.start > t + 1);
-      if (next) seek(next.start);
-    }
-  });
+  setupAudioEngineListeners();
 
   // Theme Toggle
   document.getElementById('btnThemeToggle').addEventListener('click', () => {

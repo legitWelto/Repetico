@@ -1,4 +1,3 @@
-import { seek } from '../audio/engine.js';
 import { formatTime } from '../utils/helpers.js';
 
 export function renderSections(sections, containerId, onClick) {

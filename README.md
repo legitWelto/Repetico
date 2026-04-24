@@ -86,62 +86,35 @@ The interface intelligently morphs to fit your device and environment.
 4. **Open the app:**
    Navigate to `http://localhost:3000` in your browser.
 
-## Android Packaging Instructions
+## Installing on Android
 
-We use **Capacitor** to wrap this web application into a native Android APK. 
+You can install Repetico directly on your Android phone using the provided installation file (`repectico.apk`). No app store or complicated setup is required.
 
-> [!NOTE]
-> The `android` folder should be **committed** to your repository. It contains essential native configurations and asset overrides. Build artifacts are already excluded via `.gitignore`.
+### Simple Installation Steps
 
-Follow these steps on a machine with Android Studio installed:
+1. **Transfer the file to your phone**
+   Send the `repectico.apk` file from this repository to your Android device. You can do this via:
+   - USB cable transfer
+   - Uploading it to Google Drive or Dropbox
+   - Emailing it to yourself
+   - Messaging apps (like Telegram or WhatsApp)
 
-### 1. Project Setup
-Ensure all dependencies are installed:
-```bash
-npm install
-```
+2. **Open the file**
+   On your phone, open your **File Manager** or **Downloads** folder and tap on the `repectico.apk` file.
 
-### 2. Initialize Capacitor
-Initialize the Capacitor configuration (if not already done):
-```bash
-npm run cap:init
-```
+3. **Allow Installation**
+   If this is your first time installing an app this way, Android will ask for permission:
+   - A message will pop up saying "For your security, your phone is not allowed to install unknown apps from this source."
+   - Tap **Settings**.
+   - Toggle the switch for **Allow from this source** to ON.
+   - Tap the **Back** button.
 
-### 3. Add Android Platform
-Create the native Android project folder:
-```bash
-npm run cap:add:android
-```
+4. **Confirm Install**
+   A window will appear asking if you want to install the app. Tap **Install**.
 
-### 4. Deploy to Android Studio (Combined)
-The fastest way to test on Android is to use the combined command which runs tests, syncs assets, and opens the IDE:
-```bash
-npm run android:deploy
-```
+5. **Open and Play**
+   Once finished, tap **Open** to start using Repetico!
 
-### 5. Manual Sync (Individual Steps)
-If you prefer to run steps manually:
-- **Sync Web Assets**: `npm run cap:copy`
-- **Open in Android Studio**: `npm run cap:open:android`
+> [!TIP]
+   You can find the app in your app drawer with the blue circular "R" icon.
 
-### 6. App Icons & Splash Screens
-We use `@capacitor/assets` to generate all required Android image sizes from source files.
-1. Place your source icon in `assets/icon-only.png` (min 1024x1024px).
-2. Place your source splash in `assets/splash.png` (min 2732x2732px).
-3. Run the generation script:
-   ```bash
-   npm run cap:assets
-   ```
-This will automatically update all density-specific folders in `android/app/src/main/res`.
-
-### 7. Build the APK (Detailed)
-Once Android Studio opens, follow these sub-steps to generate the final file:
-
-1. **Wait for Gradle Sync**: Look at the bottom status bar in Android Studio. Wait for "Gradle sync finished" and for the progress bars to disappear. This can take several minutes the first time.
-2. **Select Build Variant**: Ensure the build variant is set to `debug` (default) for testing, or `release` if you have signing keys configured.
-3. **Trigger Build**: In the top menu bar, go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
-4. **Locate Output**: 
-   - A small notification bubble will appear in the bottom-right corner once the build finishes (usually labeled "Build APK: APK(s) generated successfully").
-   - Click the blue **"locate"** link inside that bubble.
-   - This will open your file explorer to the folder containing `app-debug.apk`.
-5. **Install on Device**: Transfer this `.apk` file to your Android phone (via USB, Drive, or Email) and open it to install the game.

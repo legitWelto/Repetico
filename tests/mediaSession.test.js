@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock engine.js
-vi.mock('../src/js/audio/engine.js', () => ({
+// Mock engine.js (now WebAudioService)
+vi.mock('../src/js/services/audio/WebAudioService.js', () => ({
   play: vi.fn(),
   pause: vi.fn(),
   seek: vi.fn(),
