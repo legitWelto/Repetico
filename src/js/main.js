@@ -132,7 +132,7 @@ async function loadSong(id) {
   const url = URL.createObjectURL(song.file);
   loadAudio(url);
 
-  setupMediaSession(metadata.name, metadata.artist);
+  await setupMediaSession(metadata.name, metadata.artist);
 
   // Render sections
   const safeSections = metadata.sections || [];
@@ -340,30 +340,30 @@ on('loaded', (dur) => {
   if (appState.onAudioLoaded) appState.onAudioLoaded(dur);
 });
 
-bindMediaSessionControls({
-  onPlay: play,
-  onPause: pause,
-  onSeekTo: seek,
-  onPrevSection: () => {
-    const t = getCurrentTime();
-    const secs = appState.metadata?.sections || [];
-    // Find section that starts before current time - 4 sec (longer window for double-click back)
-    const prev = [...secs].reverse().find(s => s.start < t - 4);
-    if (prev) seek(prev.start);
-    else seek(0);
-  },
-  onNextSection: () => {
-    const t = getCurrentTime();
-    const secs = appState.metadata?.sections || [];
-    const next = secs.find(s => s.start > t + 1);
-    if (next) seek(next.start);
-  }
-});
-
 // Initialize
 async function init() {
   // Wait for Capacitor media session plugin to be ready (if on Android)
   await ensureCapReady();
+
+  await bindMediaSessionControls({
+    onPlay: play,
+    onPause: pause,
+    onSeekTo: seek,
+    onPrevSection: () => {
+      const t = getCurrentTime();
+      const secs = appState.metadata?.sections || [];
+      // Find section that starts before current time - 4 sec (longer window for double-click back)
+      const prev = [...secs].reverse().find(s => s.start < t - 4);
+      if (prev) seek(prev.start);
+      else seek(0);
+    },
+    onNextSection: () => {
+      const t = getCurrentTime();
+      const secs = appState.metadata?.sections || [];
+      const next = secs.find(s => s.start > t + 1);
+      if (next) seek(next.start);
+    }
+  });
 
   // Theme Toggle
   document.getElementById('btnThemeToggle').addEventListener('click', () => {

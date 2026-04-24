@@ -14,7 +14,7 @@ const capReady = loadCapMediaSession();
 
 const isNativeAndroid = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform() === 'android';
 
-export function setupMediaSession(songTitle, artist) {
+export async function setupMediaSession(songTitle, artist) {
   const metadata = {
     title: songTitle || 'Unknown Title',
     artist: '', // User requested no artist name
@@ -24,8 +24,12 @@ export function setupMediaSession(songTitle, artist) {
     ]
   };
 
-  if (isNativeAndroid && CapMediaSession) {
-    CapMediaSession.setMetadata(metadata);
+  if (isNativeAndroid) {
+    await capReady;
+    if (CapMediaSession) {
+      CapMediaSession.setMetadata(metadata);
+      CapMediaSession.setPlaybackState({ playbackState: 'paused' });
+    }
   } else if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata(metadata);
   }
@@ -56,15 +60,21 @@ export function updateMediaSessionTitle(title) {
   }
 }
 
-export function bindMediaSessionControls(handlers) {
-  if (isNativeAndroid && CapMediaSession) {
-    // Use Capacitor plugin API
-    CapMediaSession.setActionHandler({ action: 'play' }, () => handlers.onPlay());
-    CapMediaSession.setActionHandler({ action: 'pause' }, () => handlers.onPause());
-    CapMediaSession.setActionHandler({ action: 'seekto' }, (details) => handlers.onSeekTo(details.seekTime));
-    CapMediaSession.setActionHandler({ action: 'previoustrack' }, () => handlers.onPrevSection());
-    CapMediaSession.setActionHandler({ action: 'nexttrack' }, () => handlers.onNextSection());
-  } else if ('mediaSession' in navigator) {
+export async function bindMediaSessionControls(handlers) {
+  if (isNativeAndroid) {
+    await capReady;
+    if (CapMediaSession) {
+      // Use Capacitor plugin API
+      CapMediaSession.setActionHandler({ action: 'play' }, () => handlers.onPlay());
+      CapMediaSession.setActionHandler({ action: 'pause' }, () => handlers.onPause());
+      CapMediaSession.setActionHandler({ action: 'seekto' }, (details) => handlers.onSeekTo(details.seekTime));
+      CapMediaSession.setActionHandler({ action: 'previoustrack' }, () => handlers.onPrevSection());
+      CapMediaSession.setActionHandler({ action: 'nexttrack' }, () => handlers.onNextSection());
+      return;
+    }
+  }
+  
+  if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', () => handlers.onPlay());
     navigator.mediaSession.setActionHandler('pause', () => handlers.onPause());
     navigator.mediaSession.setActionHandler('seekto', (details) => handlers.onSeekTo(details.seekTime));
