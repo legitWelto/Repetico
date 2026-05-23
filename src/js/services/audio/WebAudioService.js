@@ -59,7 +59,7 @@ export class WebAudioService {
     });
   }
 
-  async load(url, sections) {
+  async load(url, sections, blob) {
     this.audio.src = url;
     this.sections = sections || [];
     this.currentSectionIndex = 0;

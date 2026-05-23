@@ -15,8 +15,9 @@
 /**
  * @function
  * @name IAudioService#load
- * @param {string} url - Blob URL of the audio file
+ * @param {string} url - Blob URL (for web)
  * @param {Section[]} sections - Array of sections
+ * @param {Blob} [blob] - Original blob (optional, for native bridge)
  * @returns {Promise<void>}
  */
 

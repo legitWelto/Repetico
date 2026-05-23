@@ -107,6 +107,14 @@ public class AudioPlayerPlugin extends Plugin {
                     notifyListeners("onLoaded", info);
                 }
             }
+
+            @Override
+            public void onPlayerError(androidx.media3.common.PlaybackException error) {
+                android.util.Log.e("AudioPlayerPlugin", "ExoPlayer playback/loading error: " + error.getMessage(), error);
+                JSObject info = new JSObject();
+                info.put("error", error.getMessage());
+                notifyListeners("onError", info);
+            }
         });
     }
 
@@ -199,65 +207,110 @@ public class AudioPlayerPlugin extends Plugin {
         }
 
         if (mediaController != null) {
-            MediaItem mediaItem = MediaItem.fromUri(url);
-            mediaController.setMediaItem(mediaItem);
-            mediaController.prepare();
-            call.resolve();
+            performLoad(url, call);
         } else {
-            call.reject("MediaController not initialized");
+            // Wait for controller
+            controllerFuture.addListener(() -> {
+                progressHandler.post(() -> {
+                    try {
+                        mediaController = controllerFuture.get();
+                        performLoad(url, call);
+                    } catch (Exception e) {
+                        call.reject("Failed to initialize MediaController: " + e.getMessage());
+                    }
+                });
+            }, MoreExecutors.directExecutor());
         }
+    }
+
+    private void performLoad(String url, PluginCall call) {
+        progressHandler.post(() -> {
+            try {
+                if (mediaController == null) {
+                    call.reject("MediaController is null during load");
+                    return;
+                }
+                android.net.Uri uri = android.net.Uri.parse(url);
+                MediaItem mediaItem = new MediaItem.Builder().setUri(uri).build();
+                mediaController.setMediaItem(mediaItem);
+                mediaController.prepare();
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Error loading media: " + e.getMessage());
+            }
+        });
     }
 
     @PluginMethod
     public void play(PluginCall call) {
-        if (mediaController != null) {
-            mediaController.play();
-            call.resolve();
-        }
+        progressHandler.post(() -> {
+            if (mediaController != null) {
+                mediaController.play();
+                call.resolve();
+            } else {
+                call.reject("MediaController not initialized");
+            }
+        });
     }
 
     @PluginMethod
     public void pause(PluginCall call) {
-        if (mediaController != null) {
-            mediaController.pause();
-            call.resolve();
-        }
+        progressHandler.post(() -> {
+            if (mediaController != null) {
+                mediaController.pause();
+                call.resolve();
+            } else {
+                call.reject("MediaController not initialized");
+            }
+        });
     }
 
     @PluginMethod
     public void seek(PluginCall call) {
         Double seconds = call.getDouble("seconds");
-        if (mediaController != null && seconds != null) {
-            mediaController.seekTo((long) (seconds * 1000));
-            call.resolve();
-        }
+        progressHandler.post(() -> {
+            if (mediaController != null && seconds != null) {
+                mediaController.seekTo((long) (seconds * 1000));
+                call.resolve();
+            } else {
+                call.reject("MediaController not initialized or missing seconds parameter");
+            }
+        });
     }
 
     @PluginMethod
     public void setSpeed(PluginCall call) {
         Double rate = call.getDouble("rate");
-        if (mediaController != null && rate != null) {
-            mediaController.setPlaybackParameters(new PlaybackParameters(rate.floatValue()));
-            call.resolve();
-        }
+        progressHandler.post(() -> {
+            if (mediaController != null && rate != null) {
+                mediaController.setPlaybackParameters(new PlaybackParameters(rate.floatValue()));
+                call.resolve();
+            } else {
+                call.reject("MediaController not initialized or missing rate parameter");
+            }
+        });
     }
 
     @PluginMethod
     public void setLoop(PluginCall call) {
-        loopStart = call.getDouble("start", 0.0);
-        loopEnd = call.getDouble("end", 0.0);
-        autoLoop = call.getBoolean("autoLoop", false);
-        loopDelay = call.getInt("delay", 0);
-        call.resolve();
+        progressHandler.post(() -> {
+            loopStart = call.getDouble("start", 0.0);
+            loopEnd = call.getDouble("end", 0.0);
+            autoLoop = call.getBoolean("autoLoop", false);
+            loopDelay = call.getInt("delay", 0);
+            call.resolve();
+        });
     }
 
     @PluginMethod
     public void destroy(PluginCall call) {
-        if (mediaController != null) {
-            mediaController.stop();
-            mediaController.release();
-            mediaController = null;
-        }
-        call.resolve();
+        progressHandler.post(() -> {
+            if (mediaController != null) {
+                mediaController.stop();
+                mediaController.release();
+                mediaController = null;
+            }
+            call.resolve();
+        });
     }
 }

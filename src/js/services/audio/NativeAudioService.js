@@ -1,4 +1,5 @@
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin, Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 // We'll create this custom plugin in Android
 const AudioPlayerPlugin = registerPlugin('AudioPlayerPlugin');
@@ -56,14 +57,56 @@ export class NativeAudioService {
         this.onSpeedChangeCallback(info.rate);
       }
     });
+
+    // Listen for errors from the native side
+    AudioPlayerPlugin.addListener('onError', (info) => {
+      console.error("Native Audio Player Error:", info.error);
+    });
     
     // Listen for state sync from native (e.g. Speed Up clicked)
     // We could dispatch custom events or use a dedicated callback if needed.
   }
 
-  async load(url, sections) {
+  async load(url, sections, blob) {
     this.sections = sections || [];
     
+    let finalUrl = url;
+
+    // Handle blob URLs on Android
+    if (Capacitor.getPlatform() === 'android' && (blob || url.startsWith('blob:'))) {
+      try {
+        let audioBlob = blob;
+        if (!audioBlob && url.startsWith('blob:')) {
+          const response = await fetch(url);
+          audioBlob = await response.blob();
+        }
+        
+        if (audioBlob) {
+          // Convert blob to base64
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+          });
+          reader.readAsDataURL(audioBlob);
+          const base64Data = await base64Promise;
+
+          // Save to temp file
+          const fileName = `temp_audio_${Date.now()}.mp3`;
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: Directory.Cache
+          });
+
+          finalUrl = savedFile.uri;
+        }
+      } catch (e) {
+        console.error("Failed to process blob URL for native playback", e);
+        throw new Error("Failed to process audio data for native playback: " + e.message);
+      }
+    }
+
     // Convert sections array to something native can easily parse
     const nativeSections = this.sections.map(s => ({
       name: s.name,
@@ -72,7 +115,7 @@ export class NativeAudioService {
     }));
 
     await AudioPlayerPlugin.load({
-      url,
+      url: finalUrl,
       sections: nativeSections
     });
   }

@@ -117,8 +117,9 @@ async function loadLibrary() {
 }
 
 async function loadSong(id) {
-  appState.activeSongId = id;
-  const { song, metadata } = await getSongData(id);
+  try {
+    appState.activeSongId = id;
+    const { song, metadata } = await getSongData(id);
   if (!song || !metadata) return;
 
   appState.metadata = metadata;
@@ -129,21 +130,29 @@ async function loadSong(id) {
 
   // Load Audio
   const url = URL.createObjectURL(song.file);
-  await AudioEngine.load(url, metadata.sections || []);
+  await AudioEngine.load(url, metadata.sections || [], song.file);
 
   // Render sections
   const safeSections = metadata.sections || [];
-  renderSections(safeSections, 'secGrid', (sec) => {
-    AudioEngine.seek(sec.start);
-    AudioEngine.play();
-  });
   
-  renderSectionsList(safeSections);
+  // Use a small delay to ensure DOM is ready for ResizeObserver in renderSections
+  setTimeout(() => {
+    renderSections(safeSections, 'secGrid', (sec) => {
+      AudioEngine.seek(sec.start);
+      AudioEngine.play();
+    });
+    
+    renderSectionsList(safeSections);
+  }, 100);
 
   // Interval settings
   renderIntervalSections(safeSections, calculateIntervalBounds);
 
   loadLibrary(); // update active state in list
+} catch (e) {
+  console.error("Error loading song:", e);
+  alert("Could not load song. Please try again.");
+}
 }
 
 function updateSectionsUI() {
